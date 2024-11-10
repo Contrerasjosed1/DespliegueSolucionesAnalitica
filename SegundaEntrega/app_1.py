@@ -1,7 +1,7 @@
 import dash
 import joblib
 from dash import dcc, html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
@@ -63,49 +63,56 @@ def left_panel():
         children=[
             html.P("Seleccione las características de su queja", 
                     style={"fontSize": "15px", 'color':'white', "padding": "10px"}),
+            html.P("Región:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="REGION",
                 options=[{"label": region, "value": region} for region in data['REGION'].unique()],
                 placeholder="Región",
                 style={"marginBottom": "10px"}
             ),
+            html.P("Tema de atención:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="ATENCION_TEMA",
                 options=[{"label": ATENCION_TEMA, "value": ATENCION_TEMA} for ATENCION_TEMA in data['ATENCION_TEMA'].unique()],
-                placeholder="ATENCION_TEMA",
+                placeholder="Tema de atención",
                 style={"marginBottom": "10px"}
             ),
+            html.P("Rango de edad de la persona:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="PERSONA_RANGO_EDAD",
                 options=[{"label": PERSONA_RANGO_EDAD, "value": PERSONA_RANGO_EDAD} for PERSONA_RANGO_EDAD in data['PERSONA_RANGO_EDAD'].unique()],
-                placeholder="PERSONA_RANGO_EDAD",
+                placeholder="Persona rango edad",
                 style={"marginBottom": "10px"}
             ),
+            html.P("Género:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="PERSONA_GENERO",
                 options=[{"label": PERSONA_GENERO, "value": PERSONA_GENERO} for PERSONA_GENERO in data['PERSONA_GENERO'].unique()],
-                placeholder="PERSONA_GENERO",
+                placeholder="Género",
                 style={"marginBottom": "10px"}
             ),
+            html.P("Profesión:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="PERSONA_PROFESION",
                 options=[{"label": PERSONA_PROFESION, "value": PERSONA_PROFESION} for PERSONA_PROFESION in data['PERSONA_PROFESION'].unique()],
-                placeholder="PERSONA_PROFESION",
+                placeholder="Profesión",
                 style={"marginBottom": "10px"}
             ),
+            html.P("Tipo de producto:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="TIPO_PRODUCTO",
                 options=[{"label": TIPO_PRODUCTO, "value": TIPO_PRODUCTO} for TIPO_PRODUCTO in data['TIPO_PRODUCTO'].unique()],
-                placeholder="TIPO_PRODUCTO",
+                placeholder="Tipo de producto",
                 style={"marginBottom": "10px"}
             ),
+            html.P("Valor del producto:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="VALOR_PRODUCTO",
                 options=[{"label": VALOR_PRODUCTO, "value": VALOR_PRODUCTO} for VALOR_PRODUCTO in data['VALOR_PRODUCTO'].unique()],
-                placeholder="VALOR_PRODUCTO",
+                placeholder="Valor del producto",
                 style={"marginBottom": "10px"}
             ),
-
+            html.Button("Calcular", id="calculate_button", n_clicks=0, style={"marginTop": "20px", "width": "100%"})
 
             # Agrega más dropdowns según lo necesites
         ]
@@ -202,33 +209,38 @@ app.layout = html.Div(
 @app.callback(
     Output("bar_graph", "figure"),
     Output("prediction_output", "children"),
-    [Input("REGION", "value"), Input("ATENCION_TEMA", "value"), Input("PERSONA_RANGO_EDAD", "value"), 
-     Input("PERSONA_GENERO", "value"), Input("PERSONA_PROFESION", "value"), Input("TIPO_PRODUCTO", "value")
-     , Input("VALOR_PRODUCTO", "value")]
+    [Input('calculate_button', 'n_clicks')],
+    [State("REGION", "value"), State("ATENCION_TEMA", "value"), State("PERSONA_RANGO_EDAD", "value"), 
+     State("PERSONA_GENERO", "value"), State("PERSONA_PROFESION", "value"), State("TIPO_PRODUCTO", "value")
+     , State("VALOR_PRODUCTO", "value")]
 )
-def update_bar_graph(REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO):
+def update_bar_graph(n_clicks, REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO):
     # Genera datos de ejemplo, puedes reemplazar con datos reales
-    input_data = pd.DataFrame([[REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO]], columns=['REGION', 'ATENCION_TEMA', 'PERSONA_RANGO_EDAD', 'PERSONA_GENERO', 'PERSONA_PROFESION', 'TIPO_PRODUCTO', 'VALOR_PRODUCTO'])
-    prediction = pipeline.predict(input_data)[0]
-    
-    y_values = np.random.randint(1, 10, size=5)
-    fig = go.Figure(go.Bar(
-        y=["Característica 1", "Característica 2", "Característica 3", "Característica 4", "Característica 5"],
-        x=y_values,
-        orientation='h'
-    ))
+    if n_clicks > 0:
+        input_data = pd.DataFrame([[REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO]], columns=['REGION', 'ATENCION_TEMA', 'PERSONA_RANGO_EDAD', 'PERSONA_GENERO', 'PERSONA_PROFESION', 'TIPO_PRODUCTO', 'VALOR_PRODUCTO'])
+        prediction = pipeline.predict(input_data)[0]
+        
+        y_values = np.random.randint(1, 10, size=5)
+        fig = go.Figure(go.Bar(
+            y=["Característica 1", "Característica 2", "Característica 3", "Característica 4", "Característica 5"],
+            x=y_values,
+            orientation='h'
+        ))
 
 
-    fig.update_layout(
-        height=400,  # Ajusta la altura del gráfico en píxeles
-        width=700,   # Ajusta el ancho del gráfico en píxeles
-        paper_bgcolor='#2b2b2b',
-        plot_bgcolor='#2b2b2b',
-        font_color='#2cfec1',
-        xaxis=dict(showgrid=False),
-        yaxis=dict(showgrid=False)
-    )
-    return fig, f"{prediction:.2f}"
+        fig.update_layout(
+            height=400,  # Ajusta la altura del gráfico en píxeles
+            width=700,   # Ajusta el ancho del gráfico en píxeles
+            paper_bgcolor='#2b2b2b',
+            plot_bgcolor='#2b2b2b',
+            font_color='#2cfec1',
+            xaxis=dict(showgrid=False),
+            yaxis=dict(showgrid=False)
+        )
+        return fig, f"{prediction:.2f}"
+
+    # Si el botón no ha sido clicado, devuelve valores por defecto
+    return go.Figure(), "--"
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
