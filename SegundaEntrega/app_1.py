@@ -1,7 +1,7 @@
 import dash
 import joblib
 from dash import dcc, html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
@@ -63,49 +63,56 @@ def left_panel():
         children=[
             html.P("Seleccione las características de su queja", 
                     style={"fontSize": "15px", 'color':'white', "padding": "10px"}),
+            html.P("Región:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="REGION",
                 options=[{"label": region, "value": region} for region in data['REGION'].unique()],
                 placeholder="Región",
-                style={"marginBottom": "10px"}
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
+            html.P("Tema de atención:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="ATENCION_TEMA",
                 options=[{"label": ATENCION_TEMA, "value": ATENCION_TEMA} for ATENCION_TEMA in data['ATENCION_TEMA'].unique()],
-                placeholder="ATENCION_TEMA",
-                style={"marginBottom": "10px"}
+                placeholder="Tema de atención",
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
+            html.P("Rango de edad de la persona:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="PERSONA_RANGO_EDAD",
                 options=[{"label": PERSONA_RANGO_EDAD, "value": PERSONA_RANGO_EDAD} for PERSONA_RANGO_EDAD in data['PERSONA_RANGO_EDAD'].unique()],
-                placeholder="PERSONA_RANGO_EDAD",
-                style={"marginBottom": "10px"}
+                placeholder="Persona rango edad",
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
+            html.P("Género:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="PERSONA_GENERO",
                 options=[{"label": PERSONA_GENERO, "value": PERSONA_GENERO} for PERSONA_GENERO in data['PERSONA_GENERO'].unique()],
-                placeholder="PERSONA_GENERO",
-                style={"marginBottom": "10px"}
+                placeholder="Género",
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
+            html.P("Profesión:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="PERSONA_PROFESION",
                 options=[{"label": PERSONA_PROFESION, "value": PERSONA_PROFESION} for PERSONA_PROFESION in data['PERSONA_PROFESION'].unique()],
-                placeholder="PERSONA_PROFESION",
-                style={"marginBottom": "10px"}
+                placeholder="Profesión",
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
+            html.P("Tipo de producto:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="TIPO_PRODUCTO",
                 options=[{"label": TIPO_PRODUCTO, "value": TIPO_PRODUCTO} for TIPO_PRODUCTO in data['TIPO_PRODUCTO'].unique()],
-                placeholder="TIPO_PRODUCTO",
-                style={"marginBottom": "10px"}
+                placeholder="Tipo de producto",
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
+            html.P("Valor del producto:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="VALOR_PRODUCTO",
                 options=[{"label": VALOR_PRODUCTO, "value": VALOR_PRODUCTO} for VALOR_PRODUCTO in data['VALOR_PRODUCTO'].unique()],
-                placeholder="VALOR_PRODUCTO",
-                style={"marginBottom": "10px"}
+                placeholder="Valor del producto",
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
-
+            html.Button("Calcular", id="calculate_button", n_clicks=0, style={"marginTop": "20px", "width": "100%"})
 
             # Agrega más dropdowns según lo necesites
         ]
@@ -119,37 +126,37 @@ def main_indicators():
             html.Div(
                 style={"width": "20%", "backgroundColor": "#333333", "padding": "10px", "borderRadius": "5px"},
                 children=[
-                    html.H4("Variable principal 1", style={"color": "white", "fontSize": "20px"}),
+                    html.H4("Valor del producto", style={"color": "white", "fontSize": "20px"}),
                     html.P("Last value:", style={"color": "#888", "textAlign": "center"}),
-                    html.H4("$ 500.000", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"}),
+                    html.H4(id= 'ValorProducto_output', children="$ 500.000", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"}),
                     html.P("COP", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
                 ]
             ),
             html.Div(
                 style={"width": "20%", "backgroundColor": "#333333", "padding": "10px", "borderRadius": "5px"},
                 children=[
-                    html.H4("Variable principal 2" , style={"color": "white", "fontSize": "20px"}),
+                    html.H4("Región" , style={"color": "white", "fontSize": "20px"}),
                     html.P("Last value:", style={"color": "#888", "textAlign": "center"}),
-                    html.H4("E 2", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
-                    html.P("Estrato", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
+                    html.H4(id='Region_output', children="E 2", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
+                    # html.P("Estrato", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
                 ]
             ),
             html.Div(
                 style={"width": "20%", "backgroundColor": "#333333", "padding": "10px", "borderRadius": "5px"},
                 children=[
-                    html.H4("Variable principal 3" , style={"color": "white", "fontSize": "20px"}),
+                    html.H4("Genero" , style={"color": "white", "fontSize": "20px"}),
                     html.P("Last value:", style={"color": "#888", "textAlign": "center"}),
-                    html.H4("SEDE CUN", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
-                    html.P("Lugar de origen", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
+                    html.H4(id='Genero_output', children="SEDE CUN", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
+                    # html.P("Lugar de origen", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
                 ]
             ),
             html.Div(
                 style={"width": "20%", "backgroundColor": "#333333", "padding": "10px", "borderRadius": "5px"},
                 children=[
-                    html.H4("Variable principal 4" , style={"color": "white", "fontSize": "20px"}),
+                    html.H4("Profesion" , style={"color": "white", "fontSize": "20px"}),
                     html.P("Last value:", style={"color": "#888", "textAlign": "center"}),
-                    html.H4("05/03/2022", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
-                    html.P("DD/MM/AAAA", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
+                    html.H4(id='Profesion_output', children="05/03/2022", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
+                    # html.P("DD/MM/AAAA", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
                 ]
             ),
             # Agrega más indicadores según lo necesites
@@ -202,33 +209,61 @@ app.layout = html.Div(
 @app.callback(
     Output("bar_graph", "figure"),
     Output("prediction_output", "children"),
-    [Input("REGION", "value"), Input("ATENCION_TEMA", "value"), Input("PERSONA_RANGO_EDAD", "value"), 
-     Input("PERSONA_GENERO", "value"), Input("PERSONA_PROFESION", "value"), Input("TIPO_PRODUCTO", "value")
-     , Input("VALOR_PRODUCTO", "value")]
+    Output("ValorProducto_output", "children"),
+    Output("Region_output", "children"),
+    Output("Genero_output", "children"),
+    Output("Profesion_output", "children"),
+    [Input('calculate_button', 'n_clicks')],
+    [State("REGION", "value"), State("ATENCION_TEMA", "value"), State("PERSONA_RANGO_EDAD", "value"), 
+     State("PERSONA_GENERO", "value"), State("PERSONA_PROFESION", "value"), State("TIPO_PRODUCTO", "value")
+     , State("VALOR_PRODUCTO", "value")]
 )
-def update_bar_graph(REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO):
+def update_bar_graph(n_clicks, REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO):
     # Genera datos de ejemplo, puedes reemplazar con datos reales
-    input_data = pd.DataFrame([[REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO]], columns=['REGION', 'ATENCION_TEMA', 'PERSONA_RANGO_EDAD', 'PERSONA_GENERO', 'PERSONA_PROFESION', 'TIPO_PRODUCTO', 'VALOR_PRODUCTO'])
-    prediction = pipeline.predict(input_data)[0]
-    
-    y_values = np.random.randint(1, 10, size=5)
-    fig = go.Figure(go.Bar(
-        y=["Característica 1", "Característica 2", "Característica 3", "Característica 4", "Característica 5"],
-        x=y_values,
-        orientation='h'
-    ))
+    if n_clicks > 0:
+        input_data = pd.DataFrame([[REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO]], columns=['REGION', 'ATENCION_TEMA', 'PERSONA_RANGO_EDAD', 'PERSONA_GENERO', 'PERSONA_PROFESION', 'TIPO_PRODUCTO', 'VALOR_PRODUCTO'])
+        prediction = pipeline.predict(input_data)[0]
+        
+        # Crear el histograma para `VALOR_PRODUCTO`
+        fig = go.Figure()
 
+        # Agregar histograma de la variable `VALOR_PRODUCTO` en el conjunto de datos
+        fig.add_trace(go.Histogram(
+            x=df['VALOR_PRODUCTO'],
+            nbinsx=3000,  # Número de bins, ajustable
+            marker=dict(color='#2cfec1'),
+            name="Distribución de VALOR_PRODUCTO"
+        ))
 
-    fig.update_layout(
-        height=400,  # Ajusta la altura del gráfico en píxeles
-        width=700,   # Ajusta el ancho del gráfico en píxeles
-        paper_bgcolor='#2b2b2b',
-        plot_bgcolor='#2b2b2b',
-        font_color='#2cfec1',
-        xaxis=dict(showgrid=False),
-        yaxis=dict(showgrid=False)
-    )
-    return fig, f"{prediction:.2f}"
+        # Agregar una línea vertical en el valor seleccionado
+        fig.add_trace(go.Scatter(
+            x=[VALOR_PRODUCTO, VALOR_PRODUCTO],
+            y=[0, max(np.histogram(df['VALOR_PRODUCTO'], bins=3000)[0]/2)],
+            mode="lines",
+            line=dict(color="red", width=3),
+            name="Valor Seleccionado"
+        ))
+        if VALOR_PRODUCTO < 100000000:
+            max_value = 100000000
+        else:
+            max_value = VALOR_PRODUCTO
+        # Configurar diseño del gráfico
+        fig.update_layout(
+            title="Histograma de Valor del Producto",
+            xaxis_title="Valor del Producto",
+            yaxis_title="Frecuencia",
+            paper_bgcolor='#2b2b2b',
+            plot_bgcolor='#2b2b2b',
+            font_color='#2cfec1',
+            height=400,
+            width=700,
+            xaxis_range=[0, max_value]
+        )
+
+        return fig, f"{prediction:.2f}", f'$ {VALOR_PRODUCTO:.1f}', REGION, PERSONA_GENERO, PERSONA_PROFESION
+
+    # Si el botón no ha sido clicado, devuelve valores por defecto
+    return go.Figure(), "--", '-', '-', '-', '-'
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
