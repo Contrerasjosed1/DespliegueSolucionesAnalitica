@@ -68,49 +68,49 @@ def left_panel():
                 id="REGION",
                 options=[{"label": region, "value": region} for region in data['REGION'].unique()],
                 placeholder="Región",
-                style={"marginBottom": "10px"}
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
             html.P("Tema de atención:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="ATENCION_TEMA",
                 options=[{"label": ATENCION_TEMA, "value": ATENCION_TEMA} for ATENCION_TEMA in data['ATENCION_TEMA'].unique()],
                 placeholder="Tema de atención",
-                style={"marginBottom": "10px"}
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
             html.P("Rango de edad de la persona:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="PERSONA_RANGO_EDAD",
                 options=[{"label": PERSONA_RANGO_EDAD, "value": PERSONA_RANGO_EDAD} for PERSONA_RANGO_EDAD in data['PERSONA_RANGO_EDAD'].unique()],
                 placeholder="Persona rango edad",
-                style={"marginBottom": "10px"}
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
             html.P("Género:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="PERSONA_GENERO",
                 options=[{"label": PERSONA_GENERO, "value": PERSONA_GENERO} for PERSONA_GENERO in data['PERSONA_GENERO'].unique()],
                 placeholder="Género",
-                style={"marginBottom": "10px"}
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
             html.P("Profesión:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="PERSONA_PROFESION",
                 options=[{"label": PERSONA_PROFESION, "value": PERSONA_PROFESION} for PERSONA_PROFESION in data['PERSONA_PROFESION'].unique()],
                 placeholder="Profesión",
-                style={"marginBottom": "10px"}
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
             html.P("Tipo de producto:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="TIPO_PRODUCTO",
                 options=[{"label": TIPO_PRODUCTO, "value": TIPO_PRODUCTO} for TIPO_PRODUCTO in data['TIPO_PRODUCTO'].unique()],
                 placeholder="Tipo de producto",
-                style={"marginBottom": "10px"}
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
             html.P("Valor del producto:", style={"color": "#888"}),
             dcc.Dropdown(
                 id="VALOR_PRODUCTO",
                 options=[{"label": VALOR_PRODUCTO, "value": VALOR_PRODUCTO} for VALOR_PRODUCTO in data['VALOR_PRODUCTO'].unique()],
                 placeholder="Valor del producto",
-                style={"marginBottom": "10px"}
+                style={"marginBottom": "10px", "color": "white", "backgroundColor": "#333333"}
             ),
             html.Button("Calcular", id="calculate_button", n_clicks=0, style={"marginTop": "20px", "width": "100%"})
 

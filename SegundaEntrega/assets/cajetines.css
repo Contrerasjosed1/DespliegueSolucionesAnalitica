@@ -1,0 +1,21 @@
+/* custom_style.css */
+
+.Select-menu-outer {
+    background-color: #333333 !important; /* Fondo gris oscuro */
+    color: white !important;              /* Texto blanco */
+}
+
+.Select-control {
+    background-color: #333333 !important;
+    color: white !important;
+}
+
+.Select-option {
+    background-color: #333333 !important;
+    color: white !important;
+}
+
+.Select-option.is-selected {
+    background-color: #555555 !important;
+    color: white !important;
+}
