@@ -126,37 +126,37 @@ def main_indicators():
             html.Div(
                 style={"width": "20%", "backgroundColor": "#333333", "padding": "10px", "borderRadius": "5px"},
                 children=[
-                    html.H4("Variable principal 1", style={"color": "white", "fontSize": "20px"}),
+                    html.H4("Valor del producto", style={"color": "white", "fontSize": "20px"}),
                     html.P("Last value:", style={"color": "#888", "textAlign": "center"}),
-                    html.H4("$ 500.000", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"}),
+                    html.H4(id= 'ValorProducto_output', children="$ 500.000", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"}),
                     html.P("COP", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
                 ]
             ),
             html.Div(
                 style={"width": "20%", "backgroundColor": "#333333", "padding": "10px", "borderRadius": "5px"},
                 children=[
-                    html.H4("Variable principal 2" , style={"color": "white", "fontSize": "20px"}),
+                    html.H4("Región" , style={"color": "white", "fontSize": "20px"}),
                     html.P("Last value:", style={"color": "#888", "textAlign": "center"}),
-                    html.H4("E 2", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
-                    html.P("Estrato", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
+                    html.H4(id='Region_output', children="E 2", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
+                    # html.P("Estrato", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
                 ]
             ),
             html.Div(
                 style={"width": "20%", "backgroundColor": "#333333", "padding": "10px", "borderRadius": "5px"},
                 children=[
-                    html.H4("Variable principal 3" , style={"color": "white", "fontSize": "20px"}),
+                    html.H4("Genero" , style={"color": "white", "fontSize": "20px"}),
                     html.P("Last value:", style={"color": "#888", "textAlign": "center"}),
-                    html.H4("SEDE CUN", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
-                    html.P("Lugar de origen", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
+                    html.H4(id='Genero_output', children="SEDE CUN", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
+                    # html.P("Lugar de origen", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
                 ]
             ),
             html.Div(
                 style={"width": "20%", "backgroundColor": "#333333", "padding": "10px", "borderRadius": "5px"},
                 children=[
-                    html.H4("Variable principal 4" , style={"color": "white", "fontSize": "20px"}),
+                    html.H4("Profesion" , style={"color": "white", "fontSize": "20px"}),
                     html.P("Last value:", style={"color": "#888", "textAlign": "center"}),
-                    html.H4("05/03/2022", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
-                    html.P("DD/MM/AAAA", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
+                    html.H4(id='Profesion_output', children="05/03/2022", style={"fontSize": "40px", "textAlign": "center", "marginTop": "-15px"} ),
+                    # html.P("DD/MM/AAAA", style={"color": "#888", "textAlign": "center", "marginTop": "-15px"}),
                 ]
             ),
             # Agrega más indicadores según lo necesites
@@ -209,6 +209,10 @@ app.layout = html.Div(
 @app.callback(
     Output("bar_graph", "figure"),
     Output("prediction_output", "children"),
+    Output("ValorProducto_output", "children"),
+    Output("Region_output", "children"),
+    Output("Genero_output", "children"),
+    Output("Profesion_output", "children"),
     [Input('calculate_button', 'n_clicks')],
     [State("REGION", "value"), State("ATENCION_TEMA", "value"), State("PERSONA_RANGO_EDAD", "value"), 
      State("PERSONA_GENERO", "value"), State("PERSONA_PROFESION", "value"), State("TIPO_PRODUCTO", "value")
@@ -220,27 +224,46 @@ def update_bar_graph(n_clicks, REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSON
         input_data = pd.DataFrame([[REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO]], columns=['REGION', 'ATENCION_TEMA', 'PERSONA_RANGO_EDAD', 'PERSONA_GENERO', 'PERSONA_PROFESION', 'TIPO_PRODUCTO', 'VALOR_PRODUCTO'])
         prediction = pipeline.predict(input_data)[0]
         
-        y_values = np.random.randint(1, 10, size=5)
-        fig = go.Figure(go.Bar(
-            y=["Característica 1", "Característica 2", "Característica 3", "Característica 4", "Característica 5"],
-            x=y_values,
-            orientation='h'
+        # Crear el histograma para `VALOR_PRODUCTO`
+        fig = go.Figure()
+
+        # Agregar histograma de la variable `VALOR_PRODUCTO` en el conjunto de datos
+        fig.add_trace(go.Histogram(
+            x=df['VALOR_PRODUCTO'],
+            nbinsx=3000,  # Número de bins, ajustable
+            marker=dict(color='#2cfec1'),
+            name="Distribución de VALOR_PRODUCTO"
         ))
 
-
+        # Agregar una línea vertical en el valor seleccionado
+        fig.add_trace(go.Scatter(
+            x=[VALOR_PRODUCTO, VALOR_PRODUCTO],
+            y=[0, max(np.histogram(df['VALOR_PRODUCTO'], bins=3000)[0]/2)],
+            mode="lines",
+            line=dict(color="red", width=3),
+            name="Valor Seleccionado"
+        ))
+        if VALOR_PRODUCTO < 100000000:
+            max_value = 100000000
+        else:
+            max_value = VALOR_PRODUCTO
+        # Configurar diseño del gráfico
         fig.update_layout(
-            height=400,  # Ajusta la altura del gráfico en píxeles
-            width=700,   # Ajusta el ancho del gráfico en píxeles
+            title="Histograma de Valor del Producto",
+            xaxis_title="Valor del Producto",
+            yaxis_title="Frecuencia",
             paper_bgcolor='#2b2b2b',
             plot_bgcolor='#2b2b2b',
             font_color='#2cfec1',
-            xaxis=dict(showgrid=False),
-            yaxis=dict(showgrid=False)
+            height=400,
+            width=700,
+            xaxis_range=[0, max_value]
         )
-        return fig, f"{prediction:.2f}"
+
+        return fig, f"{prediction:.2f}", f'$ {VALOR_PRODUCTO:.1f}', REGION, PERSONA_GENERO, PERSONA_PROFESION
 
     # Si el botón no ha sido clicado, devuelve valores por defecto
-    return go.Figure(), "--"
+    return go.Figure(), "--", '-', '-', '-', '-'
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
