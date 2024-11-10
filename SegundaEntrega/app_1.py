@@ -1,9 +1,47 @@
 import dash
+import joblib
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
+
+pipeline = joblib.load('modelo_prediccion_pipeline.pkl')
+
+# Cargar datos
+df = pd.read_csv('SegundaEntrega/ARREGLO_DIRECTO.csv', delimiter=';')
+
+# Procesamiento de datos
+REGION_DEPTO = {
+    'ATLANTICO': 'Caribe',
+    'BOLIVAR': 'Caribe',
+    'CESAR': 'Caribe',
+    'CORDOBA': 'Caribe',
+    'SUCRE': 'Caribe',
+    'SAN ANDRES': 'Caribe',
+    'CAUCA': 'Pacífica',
+    'VALLE DEL CAUCA': 'Pacífica',
+    'NARIÑO': 'Pacífica',
+    'BOGOTA': 'Andina',
+    'CUNDINAMARCA': 'Andina',
+    'HUILA': 'Andina',
+    'TOLIMA': 'Andina',
+    'QUINDIO': 'Andina',
+    'RISARALDA': 'Andina',
+    'SANTANDER': 'Andina',
+    'N. DE SANTANDER': 'Andina',
+    'META': 'Orinoquia'}
+
+# Limpieza de datos
+df['VALOR_PRODUCTO'] = df['VALOR_PRODUCTO'].replace({r'[^\d.]': '', 'INDETERMINADO': None}, regex=True)
+df['VALOR_PRODUCTO'] = pd.to_numeric(df['VALOR_PRODUCTO'], errors='coerce')
+promedio = df.loc[df['VALOR_PRODUCTO'] > 0, 'VALOR_PRODUCTO'].mean()
+df['VALOR_PRODUCTO'] = df['VALOR_PRODUCTO'].apply(lambda x: promedio if pd.isna(x) or x == 0 else x)
+df['REGION'] = df['UNIDAD_DEPARTAMENTO'].map(REGION_DEPTO)
+
+# Selección de variables
+variables_interes = ['REGION', 'ATENCION_TEMA', 'PERSONA_RANGO_EDAD', 'PERSONA_GENERO', 'PERSONA_PROFESION', 'TIPO_PRODUCTO', 'VALOR_PRODUCTO', 'DURACION']
+data = df[variables_interes].copy()
 
 app = dash.Dash(__name__)
 
@@ -26,23 +64,49 @@ def left_panel():
             html.P("Seleccione las características de su queja", 
                     style={"fontSize": "15px", 'color':'white', "padding": "10px"}),
             dcc.Dropdown(
-                id="caracteristica1",
-                options=[{"label": f"Característica {i}", "value": i} for i in range(1, 9)],
-                placeholder="Característica 1",
+                id="REGION",
+                options=[{"label": region, "value": region} for region in data['REGION'].unique()],
+                placeholder="Región",
                 style={"marginBottom": "10px"}
             ),
             dcc.Dropdown(
-                id="caracteristica2",
-                options=[{"label": f"Característica {i}", "value": i} for i in range(1, 9)],
-                placeholder="Característica 2",
+                id="ATENCION_TEMA",
+                options=[{"label": ATENCION_TEMA, "value": ATENCION_TEMA} for ATENCION_TEMA in data['ATENCION_TEMA'].unique()],
+                placeholder="ATENCION_TEMA",
                 style={"marginBottom": "10px"}
             ),
             dcc.Dropdown(
-                id="caracteristica3",
-                options=[{"label": f"Característica {i}", "value": i} for i in range(1, 9)],
-                placeholder="Característica 3",
+                id="PERSONA_RANGO_EDAD",
+                options=[{"label": PERSONA_RANGO_EDAD, "value": PERSONA_RANGO_EDAD} for PERSONA_RANGO_EDAD in data['PERSONA_RANGO_EDAD'].unique()],
+                placeholder="PERSONA_RANGO_EDAD",
                 style={"marginBottom": "10px"}
             ),
+            dcc.Dropdown(
+                id="PERSONA_GENERO",
+                options=[{"label": PERSONA_GENERO, "value": PERSONA_GENERO} for PERSONA_GENERO in data['PERSONA_GENERO'].unique()],
+                placeholder="PERSONA_GENERO",
+                style={"marginBottom": "10px"}
+            ),
+            dcc.Dropdown(
+                id="PERSONA_PROFESION",
+                options=[{"label": PERSONA_PROFESION, "value": PERSONA_PROFESION} for PERSONA_PROFESION in data['PERSONA_PROFESION'].unique()],
+                placeholder="PERSONA_PROFESION",
+                style={"marginBottom": "10px"}
+            ),
+            dcc.Dropdown(
+                id="TIPO_PRODUCTO",
+                options=[{"label": TIPO_PRODUCTO, "value": TIPO_PRODUCTO} for TIPO_PRODUCTO in data['TIPO_PRODUCTO'].unique()],
+                placeholder="TIPO_PRODUCTO",
+                style={"marginBottom": "10px"}
+            ),
+            dcc.Dropdown(
+                id="VALOR_PRODUCTO",
+                options=[{"label": VALOR_PRODUCTO, "value": VALOR_PRODUCTO} for VALOR_PRODUCTO in data['VALOR_PRODUCTO'].unique()],
+                placeholder="VALOR_PRODUCTO",
+                style={"marginBottom": "10px"}
+            ),
+
+
             # Agrega más dropdowns según lo necesites
         ]
     )
@@ -105,7 +169,8 @@ def graphs_section():
                 style={"backgroundColor": "#333333", "padding": "10px", "borderRadius": "5px"},
                 children=[
                     html.H4("Predicción:", style={"color": "white", "fontSize": "20px"}),
-                    html.H2("100", style={"fontSize": "100px", "textAlign": "center"}),
+                    # html.H2("100", style={"fontSize": "100px", "textAlign": "center"}),
+                    html.H2(id="prediction_output", children="100", style={"fontSize": "100px", "textAlign": "center"}),
                     html.P("días", style={"color": "#888", "textAlign": "center"}),
                 ]
             ),
@@ -136,10 +201,16 @@ app.layout = html.Div(
 # Callback para actualizar el gráfico de barras
 @app.callback(
     Output("bar_graph", "figure"),
-    [Input("caracteristica1", "value"), Input("caracteristica2", "value")]
+    Output("prediction_output", "children"),
+    [Input("REGION", "value"), Input("ATENCION_TEMA", "value"), Input("PERSONA_RANGO_EDAD", "value"), 
+     Input("PERSONA_GENERO", "value"), Input("PERSONA_PROFESION", "value"), Input("TIPO_PRODUCTO", "value")
+     , Input("VALOR_PRODUCTO", "value")]
 )
-def update_bar_graph(caracteristica1, caracteristica2):
+def update_bar_graph(REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO):
     # Genera datos de ejemplo, puedes reemplazar con datos reales
+    input_data = pd.DataFrame([[REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO]], columns=['REGION', 'ATENCION_TEMA', 'PERSONA_RANGO_EDAD', 'PERSONA_GENERO', 'PERSONA_PROFESION', 'TIPO_PRODUCTO', 'VALOR_PRODUCTO'])
+    prediction = pipeline.predict(input_data)[0]
+    
     y_values = np.random.randint(1, 10, size=5)
     fig = go.Figure(go.Bar(
         y=["Característica 1", "Característica 2", "Característica 3", "Característica 4", "Característica 5"],
@@ -157,7 +228,7 @@ def update_bar_graph(caracteristica1, caracteristica2):
         xaxis=dict(showgrid=False),
         yaxis=dict(showgrid=False)
     )
-    return fig
+    return fig, f"{prediction:.2f}"
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
