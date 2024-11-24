@@ -5,8 +5,10 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
+import requests
 
 pipeline = joblib.load('modelo_prediccion_pipeline.pkl')
+API_URL = "http://localhost:8001/api/v1/predict"  # Cambia localhost por la IP de tu servidor si no está local
 
 # Cargar datos
 df = pd.read_csv('SegundaEntrega/ARREGLO_DIRECTO.csv', delimiter=';')
@@ -215,54 +217,65 @@ app.layout = html.Div(
     Output("Profesion_output", "children"),
     [Input('calculate_button', 'n_clicks')],
     [State("REGION", "value"), State("ATENCION_TEMA", "value"), State("PERSONA_RANGO_EDAD", "value"), 
-     State("PERSONA_GENERO", "value"), State("PERSONA_PROFESION", "value"), State("TIPO_PRODUCTO", "value")
-     , State("VALOR_PRODUCTO", "value")]
+     State("PERSONA_GENERO", "value"), State("PERSONA_PROFESION", "value"), State("TIPO_PRODUCTO", "value"),
+     State("VALOR_PRODUCTO", "value")]
 )
 def update_bar_graph(n_clicks, REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO):
-    # Genera datos de ejemplo, puedes reemplazar con datos reales
     if n_clicks > 0:
-        input_data = pd.DataFrame([[REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSONA_GENERO, PERSONA_PROFESION, TIPO_PRODUCTO, VALOR_PRODUCTO]], columns=['REGION', 'ATENCION_TEMA', 'PERSONA_RANGO_EDAD', 'PERSONA_GENERO', 'PERSONA_PROFESION', 'TIPO_PRODUCTO', 'VALOR_PRODUCTO'])
-        prediction = pipeline.predict(input_data)[0]
+        # Construir el payload para la API
+        input_data = {
+            "REGION": REGION,
+            "ATENCION_TEMA": ATENCION_TEMA,
+            "PERSONA_RANGO_EDAD": PERSONA_RANGO_EDAD,
+            "PERSONA_GENERO": PERSONA_GENERO,
+            "PERSONA_PROFESION": PERSONA_PROFESION,
+            "TIPO_PRODUCTO": TIPO_PRODUCTO,
+            "VALOR_PRODUCTO": VALOR_PRODUCTO
+        }
         
-        # Crear el histograma para `VALOR_PRODUCTO`
-        fig = go.Figure()
+        try:
+            # Enviar solicitud POST a la API
+            response = requests.post(API_URL, json=input_data)
+            
+            # Verificar el código de estado de la respuesta
+            if response.status_code == 200:
+                prediction = response.json().get("prediction", ["Error"])[0]
 
-        # Agregar histograma de la variable `VALOR_PRODUCTO` en el conjunto de datos
-        fig.add_trace(go.Histogram(
-            x=df['VALOR_PRODUCTO'],
-            nbinsx=3000,  # Número de bins, ajustable
-            marker=dict(color='#2cfec1'),
-            name="Distribución de VALOR_PRODUCTO"
-        ))
+                # Crear el histograma para `VALOR_PRODUCTO`
+                fig = go.Figure()
+                fig.add_trace(go.Histogram(
+                    x=df['VALOR_PRODUCTO'],
+                    nbinsx=3000,
+                    marker=dict(color='#2cfec1'),
+                    name="Distribución de VALOR_PRODUCTO"
+                ))
+                fig.add_trace(go.Scatter(
+                    x=[VALOR_PRODUCTO, VALOR_PRODUCTO],
+                    y=[0, max(np.histogram(df['VALOR_PRODUCTO'], bins=3000)[0]/2)],
+                    mode="lines",
+                    line=dict(color="red", width=3),
+                    name="Valor Seleccionado"
+                ))
+                fig.update_layout(
+                    title="Histograma de Valor del Producto",
+                    xaxis_title="Valor del Producto",
+                    yaxis_title="Frecuencia",
+                    paper_bgcolor='#2b2b2b',
+                    plot_bgcolor='#2b2b2b',
+                    font_color='#2cfec1',
+                    height=400,
+                    width=700,
+                    xaxis_range=[0, 100000000 if VALOR_PRODUCTO < 100000000 else VALOR_PRODUCTO]
+                )
 
-        # Agregar una línea vertical en el valor seleccionado
-        fig.add_trace(go.Scatter(
-            x=[VALOR_PRODUCTO, VALOR_PRODUCTO],
-            y=[0, max(np.histogram(df['VALOR_PRODUCTO'], bins=3000)[0]/2)],
-            mode="lines",
-            line=dict(color="red", width=3),
-            name="Valor Seleccionado"
-        ))
-        if VALOR_PRODUCTO < 100000000:
-            max_value = 100000000
-        else:
-            max_value = VALOR_PRODUCTO
-        # Configurar diseño del gráfico
-        fig.update_layout(
-            title="Histograma de Valor del Producto",
-            xaxis_title="Valor del Producto",
-            yaxis_title="Frecuencia",
-            paper_bgcolor='#2b2b2b',
-            plot_bgcolor='#2b2b2b',
-            font_color='#2cfec1',
-            height=400,
-            width=700,
-            xaxis_range=[0, max_value]
-        )
+                return fig, f"{prediction:.2f}", f"$ {VALOR_PRODUCTO:.1f}", REGION, PERSONA_GENERO, PERSONA_PROFESION
+            else:
+                return go.Figure(), "Error en la API", '-', '-', '-', '-'
 
-        return fig, f"{prediction:.2f}", f'$ {VALOR_PRODUCTO:.1f}', REGION, PERSONA_GENERO, PERSONA_PROFESION
+        except Exception as e:
+            return go.Figure(), f"Error: {str(e)}", '-', '-', '-', '-'
 
-    # Si el botón no ha sido clicado, devuelve valores por defecto
+    # Valores por defecto si el botón no se clicó
     return go.Figure(), "--", '-', '-', '-', '-'
 
 # Ejecutar la aplicación
