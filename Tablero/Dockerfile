@@ -1,6 +1,7 @@
 # Usar una imagen base de Python 3.10
 FROM python:3.10
 
+
 # Crear un usuario para ejecutar la aplicación
 RUN adduser --disabled-password --gecos '' dash-user
 
@@ -14,8 +15,8 @@ ADD . /opt/app
 RUN pip install --upgrade pip
 RUN pip install -r /opt/app/requirements.txt
 
-# Dar permisos de ejecución a los scripts necesarios
-RUN chmod +x /opt/app
+# Dar permisos de ejecución al script run.sh
+RUN chmod +x /opt/app/run.sh
 
 # Cambiar la propiedad de los archivos al usuario creado
 RUN chown -R dash-user:dash-user /opt/app
@@ -30,5 +31,5 @@ EXPOSE 8050
 ENV PORT=8050
 ENV API_URL=http://localhost:8001/api/v1/predict
 
-# Comando para ejecutar la aplicación
-CMD ["python", "app_1.py"]
+# Comando para ejecutar la aplicación con run.sh
+CMD ["bash", "./run.sh"]
