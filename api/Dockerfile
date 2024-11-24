@@ -1,5 +1,5 @@
 # Usar una imagen base de Python 3.10
-FROM python:3.10
+FROM python:3.11
 
 # Crear un usuario no privilegiado para ejecutar la aplicación
 RUN adduser --disabled-password --gecos '' api-user
