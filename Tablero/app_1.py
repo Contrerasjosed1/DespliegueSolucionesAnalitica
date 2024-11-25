@@ -1,17 +1,18 @@
 import dash
-import joblib
+# import joblib
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
 import requests
+import os
 
-pipeline = joblib.load('modelo_prediccion_pipeline.pkl')
-API_URL = "http://localhost:8001/api/v1/predict"  # Cambia localhost por la IP de tu servidor si no está local
+# pipeline = joblib.load('modelo_prediccion_pipeline.pkl')
+API_URL = os.environ.get("API_URL", "http://localhost:8001/api/v1/predict") # Cambia localhost por la IP de tu servidor si no está local
 
 # Cargar datos
-df = pd.read_csv('SegundaEntrega/ARREGLO_DIRECTO.csv', delimiter=';')
+df = pd.read_csv('ARREGLO_DIRECTO.csv', delimiter=';')
 
 # Procesamiento de datos
 REGION_DEPTO = {
@@ -280,4 +281,4 @@ def update_bar_graph(n_clicks, REGION, ATENCION_TEMA, PERSONA_RANGO_EDAD, PERSON
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8050)))
